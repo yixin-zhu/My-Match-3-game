@@ -1,0 +1,13 @@
+:root {
+  color: #1c1915;
+  background: #efe6d6;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+#app {
+  min-height: 100vh;
+}
