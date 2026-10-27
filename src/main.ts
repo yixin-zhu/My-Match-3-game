@@ -13,7 +13,7 @@ const maxTypes = maxTypeCount();
 app.innerHTML = `
   <main class="page">
     <header>
-      <h1>公平叠牌</h1>
+      <h1>牛了个牛</h1>
       <p class="lede">每一关都留有解法。花色越少越好过：2 到 3 种时，把能点的牌一直点下去就会清空；从 4 种开始，点错就可能把卡槽塞满。</p>
     </header>
     <section class="panel">

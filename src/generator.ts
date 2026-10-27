@@ -1,3 +1,4 @@
+import { ICONS } from "./icons";
 import { createLayout } from "./layout";
 import { applyMove, createState, isFreeAmong, statusOf } from "./rules";
 import { mulberry32, normalizeSeed, shuffle } from "./rng";
@@ -12,7 +13,7 @@ export interface Level {
 }
 
 export function maxTypeCount(tileCount = createLayout().length): number {
-  return tileCount / 3;
+  return Math.min(ICONS.length, Math.floor(tileCount / 3));
 }
 
 export function clampTypeCount(typeCount: number, tileCount = createLayout().length): number {

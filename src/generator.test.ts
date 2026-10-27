@@ -5,9 +5,9 @@ import { applyMove, canTake, createState, overlaps, statusOf } from "./rules";
 import { mulberry32, shuffle } from "./rng";
 
 describe("关卡生成", () => {
-  it("牌桌有 105 张牌，同层不互相压住", () => {
+  it("牌桌有 180 张牌，同层不互相压住", () => {
     const layout = createLayout();
-    expect(layout).toHaveLength(105);
+    expect(layout).toHaveLength(180);
     expect(layout.every((tile, index) => tile.id === index)).toBe(true);
     for (let i = 0; i < layout.length; i++) {
       for (let j = i + 1; j < layout.length; j++) {
@@ -18,23 +18,29 @@ describe("关卡生成", () => {
     }
   });
 
-  it("开局有一圈能点的牌，左右牌堆只有最上面一张能点", () => {
-    const level = generateLevel(1, 8);
-    const state = createState(level.tiles);
-    const covered = level.tiles.filter((tile) => !canTake(state, tile.id));
-    expect(covered.length).toBeGreaterThan(40);
-    expect(level.tiles.length - covered.length).toBeGreaterThan(16);
+  it("至少叠 12 层，交叉压住，拿走上面的牌会揭开下面的牌", () => {
+    const layout = createLayout();
+    const layerCount = Math.max(...layout.map((tile) => tile.z)) + 1;
+    expect(layerCount).toBeGreaterThanOrEqual(12);
 
-    const minX = Math.min(...level.tiles.map((tile) => tile.x));
-    const stack = level.tiles.filter((tile) => tile.x === minX).sort((a, b) => a.z - b.z);
-    expect(stack).toHaveLength(6);
-    const top = stack[5];
-    expect(top).toBeDefined();
-    expect(stack.filter((tile) => canTake(state, tile.id))).toEqual([top]);
+    const coversOf = (tile: (typeof layout)[number]) =>
+      layout.filter((other) => other.z > tile.z && overlaps(tile, other));
+    const crossed = layout.filter((tile) => coversOf(tile).length >= 2);
+    expect(crossed.length).toBeGreaterThan(layout.length / 2);
 
-    const afterTop = applyMove(state, top!.id);
-    const next = stack[4];
-    expect(next && canTake(afterTop, next.id)).toBe(true);
+    const deepest = layout.reduce((best, tile) => (coversOf(tile).length > coversOf(best).length ? tile : best));
+    const depth = new Set(coversOf(deepest).map((tile) => tile.z)).size;
+    expect(depth).toBeGreaterThanOrEqual(10);
+
+    const state = createState(layout);
+    const freeBefore = layout.filter((tile) => canTake(state, tile.id));
+    expect(freeBefore.length).toBeGreaterThan(12);
+    const beforeIds = new Set(freeBefore.map((tile) => tile.id));
+    const revealed = freeBefore.some((tile) => {
+      const next = applyMove(state, tile.id);
+      return next.tiles.some((other) => other.id !== tile.id && !beforeIds.has(other.id) && canTake(next, other.id));
+    });
+    expect(revealed).toBe(true);
   });
 
   it("同一种子发出来的牌相同，花色数量和每种牌的张数都符合约定", () => {
